@@ -1,3 +1,4 @@
+import os
 import webbrowser
 from random import choice
 
@@ -42,8 +43,14 @@ def setup_assistant_voice():
 def play_voice_assistant_speech(text_to_speech):
     ttsEngine.say(str(text_to_speech))
     ttsEngine.runAndWait()
-
-
+def goga_name_variants(voice_input):
+    name_variants = ['гога', 'года', 'гого', 'гог', 'гага']
+    for i in name_variants:
+        if i in voice_input:
+            name_t = i
+            return True
+def sleep_computer():
+    os.system("rundll32.exe powrprof.dll,SetSuspendState 0,1,0")
 def search_in_browser(query):
     if 'найди' in query:
         browser_index = query.index('найди') if 'найди' in query else -1
@@ -60,6 +67,31 @@ def search_in_browser(query):
 def greeting():
     response = random_greeting_response()
     play_voice_assistant_speech(response)
+def random_intro_response():
+    responses = [
+        "Я ваш голосовой ассистент, созданный Серафим, для помащи людям!"
+        "Могу помочь вам с информацией, поиском в интернете и другими задачами.",
+        "Привет! Я - ваш помощник. Давайте команды и я постараюсь вам помочь.",
+        "Приветствую! Я - голосовой ассистент. Могу выполнить различные команды.",
+        "Здравствуйте! Я - ваш виртуальный ассистент. Как я могу помочь вам сегодня?",
+        "Я ваш голосовой ассистент Гога. Я могу помочь вам с различными задачами, которые связанны с управлением компьютера. Просто попраси меня, и я постараюсь помочь."
+    ]
+    return choice(responses)
+def random_goodbye_response():
+    responses = [
+        "До свидания!",
+        "Прощайте! Надеюсь, что я вам был полезен. До следующего раза!",
+        "До встречи! Если вам что-то понадобится, я здесь.",
+        "До свидания! Я завершаю свою работу."
+    ]
+    return choice(responses)
+def random_sleep_response():
+    responses = [
+        "Хорошо, перевожу компьютер в спящий режим.",
+        "Ваш компьютер перейдет в спящий режим. До новых встреч!",
+        "Компьютер будет спать."
+    ]
+    return choice(responses)
 def praise_response():
     responses = [
         "Спасибо, рад был помочь!",
@@ -69,7 +101,15 @@ def praise_response():
         "Спасибо большое!"
     ]
     return choice(responses)
-
+def random_creator_response():
+    responses = [
+        "Меня создал Серафим на базе искусственного интеллекта.",
+        "Мой создатель - Серафим. Я являюсь продуктом искусственного интеллекта.",
+        "Я был разработан Серафимом с использованием технологии глубокого обучения.",
+        "Меня создал серафим, для помощи вам!",
+        "Меня создал лутший программист - Серафим."
+    ]
+    return choice(responses)
 def razbor_comard(query):
     for k, v in commands_dict['commands'].items():
         if any(keyword in query for keyword in v):
@@ -81,15 +121,13 @@ def handle_command(command_key, query=None):
     if command_key == 'greeting':
         greeting()
     elif command_key == 'introduce':
-        play_voice_assistant_speech("Я ваш голосовой ассистент Гога."
-                                    "Я могу помочь вам с различными задачами, которые связанны с управлением компьютера. "
-                                    "Просто попраси меня, и я постараюсь помочь.")
+        play_voice_assistant_speech(random_intro_response())
     elif command_key == 'create':
-        play_voice_assistant_speech("Меня создал лутший программист - Серафим.")
+        play_voice_assistant_speech(random_creator_response())
     elif command_key == 'search':
         search_in_browser(query)
     elif command_key == 'goodbye':
-        play_voice_assistant_speech("До свидания! Я завершаю свою работу.")
+        play_voice_assistant_speech(random_goodbye_response())
         exit()
     elif command_key == 'praise':
         response = praise_response()
@@ -97,11 +135,15 @@ def handle_command(command_key, query=None):
     elif command_key == 'how_are_you':
         response = random_how_are_you_response()
         play_voice_assistant_speech(response)
+    elif command_key == 'sleep_computer':
+        play_voice_assistant_speech(random_sleep_response())
+        sleep_computer()
     else:
         play_voice_assistant_speech("Извините, я не понял команду")
 
 
 def record_and_recognize_audio(*args: tuple):
+    print("Слушаю вас!")
     with sd.RawInputStream(samplerate=samplerate, blocksize=8000, device=device, dtype='int16',
                            channels=1, callback=q_callback):
 
@@ -143,7 +185,8 @@ if __name__ == "__main__":
             'goodbye': ['пока', 'до свидания', 'до встречи', 'прощай', 'заверши работу'],
             'search': ['найди','браузер','открой', 'интернете'],
             'praise': ['спасибо','благодарю','молодец', 'хороший'],
-            'how_are_you': ['как',  'дела', 'как', 'ты']
+            'how_are_you': ['как',  'дела', 'как', 'ты'],
+            'sleep_computer': ['переведи', 'компьютер', 'спящий режим']
         }
     }
 
@@ -151,19 +194,25 @@ if __name__ == "__main__":
     samplerate = 16000
     device = 1
     q = queue.Queue()
-
+    name_t = ''
     ttsEngine = pyttsx3.init()
     assistant = VoiceAssistant()
     assistant.name = "Goga"
     assistant.sex = "male"
     assistant.speech_language = "ru"
     setup_assistant_voice()
+
     recognizer = speech_recognition.Recognizer()
     microphone = speech_recognition.Microphone()
     while True:
         voice_input = record_and_recognize_audio()
         print(voice_input)
-        if voice_input == None:
-            play_voice_assistant_speech("Извините, я не понял команду")
-        voice_input = voice_input.split(" ")
-        razbor_comard(voice_input)
+        if goga_name_variants(voice_input):
+            voice_input = voice_input.split(" ")
+            # print(voice_input)
+            # print(name_t)
+            # voice_input.remove(name_t)
+            # print(voice_input)
+            razbor_comard(voice_input)
+        else:
+            continue
